@@ -1,0 +1,42 @@
+//
+// HemisphereLighting_Spec.psh
+// --------------------------------------------------------
+//
+// author: Daniel Sproul
+//
+// description:
+// Pixel shader which implements combined specular and hemisphere
+// lighting effect
+//
+// input:
+// color 0 (v0) -- summed lighting minus terrain contribution (sky, directional, dynamic)
+// color 1 (v1) -- intensity with which to sample the terrain texture to get terrain lighting contribution
+// texture 0 -- base texture
+// texture 1 -- terrain texture (tex coords based on world position)
+// texture 2 -- specular illumination (color data -- use texcrd)
+//
+// --------------------------------------------------------
+
+// pixel shader version
+ps.1.0
+
+// take texture samples
+tex			t0	// base texture
+tex			t1	// terrain map
+
+// retrieve specular illumination (stored in tex coord 2)
+texcoord	t2
+
+// compute lighting contribution from the terrain (color 1 * terrain texture color)
+mul			r0, t1, v1
+
+// add other light contributions (color 0)
+add			r0, r0, v0
+
+// modulate lighting with base texture
+// alpha is color 0 alpha * base texture alpha
+mul			r0.rgb, r0, t0
++ mul		r0.a, v0, t0
+
+// add specular illumination (final result modulate 4x)
+add_x4		r0.rgb, r0, t2

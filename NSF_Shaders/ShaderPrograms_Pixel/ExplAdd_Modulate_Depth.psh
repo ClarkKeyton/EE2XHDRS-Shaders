@@ -1,0 +1,22 @@
+ps.1.4
+
+// Compute depth information
+// @HACK vertex shader has output normalized z, w in tex1.xy,
+// along with the normalization mult in tex1.z
+texcrd	r5.xyz, t1
+texld	r0, t0
+mul		r0.x, r0.x, c0.y		// apply depth mult to the red channel in the texture
+mul		r0.x, r0.x, c1.x		// time?
+mad		r5.x, r0.x, r5.z, r5.x	// apply normalization mult, then add to the initial depth
+
+phase
+
+// Set the new depth (r5.r / r5.g)
+// (these needs to happen in separate phase from the texcrd access to r5)
+texdepth r5
+
+// Set the color and alpha
+texld	r0, t0
+add		r0.rgb, r0, v0
+mul		r0.rgb, r0, c2.xxx		// apply global intensity mult
++mul	r0.a, r0.a, v0.a

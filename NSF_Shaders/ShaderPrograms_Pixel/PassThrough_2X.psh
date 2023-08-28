@@ -1,0 +1,19 @@
+//
+// PassThrough_2X.psh
+// --------------------------------------------------------
+//
+// author: Daniel Sproul
+//
+// description:
+// just pass color through, modulate 2X
+//
+// input:
+// color 0 (v0) -- summed lighting
+//
+// --------------------------------------------------------
+
+// pixel shader version
+ps.1.0
+
+// @TEST this will just pass color 0
+mov_x2		r0, v0

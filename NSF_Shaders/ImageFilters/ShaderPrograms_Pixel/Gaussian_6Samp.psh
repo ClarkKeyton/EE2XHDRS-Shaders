@@ -1,0 +1,74 @@
+//
+// Gaussian_6Samp.psh
+// --------------------------------------------------------
+//
+// author: Daniel Sproul
+//
+// description:
+// shader which implements a 6-sample 3x3 gaussian blur filter for
+// post-processing a rendered scene.
+//
+// input:
+// t0 -- upper-left tex coords
+// t1 -- uppertex coords
+// t2 -- left tex coords
+// t3 -- right tex coords
+// t4 -- bottom tex coords
+// t5 -- bottom-right tex coords
+//
+// constants:
+// c0 -- SampleWeights (x = corner, y = side, z = unused, w = 1.0)
+//
+// --------------------------------------------------------
+
+// pixel shader version
+// @NOTE we use swizzles, write masks, temp registers, and 2 phases, all of which require 1.4
+ps.1.4
+
+// take texture samples
+texld	r0, t0
+texld	r1, t1
+texld	r2, t2
+texld	r3, t3
+texld 	r4, t4
+texld	r5, t5
+
+// combine first two samples
+mul		r1.rgb, r1, c0.yyy		// apply upper weight
+mad		r0.rgb, r0, c0.xxx, r1	// apply upper-left weight, add weighted upper
+
+// combine next two samples
+mul		r3.rgb, r3, c0.yyy		// apply right weight
+mad		r2.rgb, r2, c0.yyy, r3	// apply left weight, add weighted right
+
+// combine last two samples
+mul		r5.rgb, r5, c0.xxx		// apply lower-right weight
+mad		r4.rgb, r4, c0.yyy, r5	// apply lower weight, add weighted lower-right
+
+// final sum
+add		r0.rgb, r0, r2
+add		r0.rgb, r0, r4
+
+/*
+// THIS IS EQUIVALENT, BUT WHILE MORE READABLE, USES MORE INSTRUCTIONS
+
+// apply weights
+mul		r0.rgb, r0, c0.xxx	// upper-left (corner weight)
+mul		r1.rgb, r1, c0.yyy	// upper (side weight)
+mul		r2.rgb, r2, c0.yyy	// left (side weight)
+mul		r3.rgb, r3, c0.yyy	// right (side weight)
+mul		r4.rgb, r4, c0.yyy	// bottom (side weight)
+mul		r5.rgb, r5, c0.xxx	// bottom-right (corner weight)
+
+// begin phase 2
+// (max 8 arithmetic instructions per phase)
+phase
+
+// sum
+add		r0.rgb, r0, r1
+add		r0.rgb, r0, r2
+add		r0.rgb, r0, r3
+add		r0.rgb, r0, r4
+add_x2	r0.rgb, r0, r5
++ mov	r0.a, c0.w			// set alpha = 1.0 (phase 2 does not retain alpha on some hardware)
+*/

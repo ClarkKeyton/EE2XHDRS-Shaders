@@ -1,0 +1,69 @@
+//c0 - texture 1 distortion
+//c1 - texture 2 distortion
+
+ps.1.4
+	//---------------------
+	//Read environment map
+	//
+	texld r2, t0
+	texld r4, t0
+	texld r3, t1
+	texld r5, t1
+	
+	//Modulate them
+	mul r2, r2, r3
+	mul r3, r4, r5
+	lrp r2, v0.g, r2, r3
+
+	//Multiply the verex color to the environment map
+	mul r0.rgb, r2, v0.r
+	+mul r0.a, r2, v0.a
+
+	//modify the color with the coast color modifier
+	add r0.gb, r0, v1
+
+
+//ps.1.4
+//	//Read bump map value 0 and 1
+//	texld	r0,	t0
+//	texld	r1, t1
+//	//Read the view vector					
+//	texcrd	r2.rgb, t2
+//	//Read uvs
+//	texcrd	r3.rgb, t0
+//	texcrd	r5.rgb, t1
+//
+//	//Mix two bumpmap together
+//	add_d2  r1, r0, r1
+//
+//	//Switch bump map value from [0, 1] to [-1, 1]
+//	mov  r1, r1_bx2
+//
+//	//Compute the bumpmap map direction
+//	dp3 r0.rgb, r1, r2             //V.N 
+//    mad r2.rgb, r1, r0_x2, -r2     //R = 2N(V.N)-V
+//
+//	//Compute uvs
+//	mad r3.rgb, r2, c0, r3
+//	mad r5.rgb, r2, c1, r5
+//
+//phase
+//	//---------------------
+//	//Read environment map
+//	//
+//	texld r2, r3
+//	texld r4, r3
+//	texld r3, r5
+//	texld r5, r5
+//	
+//	//Modulate them
+//	mul r2, r2, r3
+//	mul r3, r4, r5
+//	lrp r2, v0.g, r2, r3
+//
+//	//Multiply the verex color to the environment map
+//	mul r0.rgb, r2, v0.r
+//	+mul r0.a, r2, v0.a
+//
+//	//modify the color with the coast color modifier
+//	add r0.gb, r0, v1

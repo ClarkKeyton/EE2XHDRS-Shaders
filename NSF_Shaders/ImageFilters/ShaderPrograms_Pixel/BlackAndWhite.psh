@@ -1,0 +1,32 @@
+//
+// BlackAndWhite.psh
+// --------------------------------------------------------
+//
+// author: Daniel Sproul
+//
+// description:
+// pixel shader which implements a black-and-white filter for
+// post-processing a rendered scene
+//
+// input:
+// texture 0 -- base texture
+// c0 -- RGB weights
+//
+// --------------------------------------------------------
+
+// pixel shader version
+// @NOTE we use swizzles and write masks which require 1.4!
+ps.1.4
+
+// take texture sample
+texld	r0, t0
+
+// modulate by RGB weights
+mul		r0, c0, r0
+
+// sum the weighted colors into the Red channel
+add		r0.r, r0.r, r0.g
+add_x2	r0.r, r0.r, r0.b	// double the end result -- we want overall modulate 2X
+
+// copy Red to Blue and Green
+mov		r0.gb, r0.rr

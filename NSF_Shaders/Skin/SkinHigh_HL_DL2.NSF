@@ -1,0 +1,162 @@
+//
+// SkinHigh_HL_DL2.NSF
+// --------------------------------------------------------
+//
+// author: Shanti Gaudreault and Daniel Sproul
+//
+// description:
+// shader which implements hemisphere lighting effect for
+// a skinned (high LOD) object, two dynamic lights
+//
+// --------------------------------------------------------
+
+NSFShader SkinHigh_HL_DL2
+{
+	// Attribute list
+	Global_Attributes
+	{
+		// defines the global attribute sundir
+		Attrib_Point3		SunDir			Artist  0.0,0.0,1.0
+		Attrib_Color		SunColor		Artist  1.0,0.0,0.0
+		//Attrib_Color		SceneAmbient	Artist  	1.0,0.0,0.0		(unused)
+		
+		// sky illumination (for hemisphere lighting)
+		Attrib_Color		SkyColor		Hidden  	1.0,0.0,0.0
+		
+		// intensity with which to sample the terrain 
+		Attrib_Color		TerrIntensity	Hidden		1.0,0.0,0.0
+		
+		// reciprocal terrain dimensions (for hemisphere lighting)
+		Attrib_Point2		TerrSizeRecip	Hidden		1.0,1.0
+	}
+	
+	Attributes
+	{
+		// the terrain texture
+		Attrib_Texture		TerrainMap			Hidden		0		// 0 == kHemisphereLightingShaderMapIndex
+		
+		// model height-based terrain contribution height cutoff reciprocal
+		Attrib_Float		CutoffHeightRecip	Hidden		1.0		// "CutoffHeightRecip" == kszExtraDataCutoffHeightRecip
+	}
+
+	// Packing Definition
+	PackingDef Pos_BlendWt_BlendInd_Norm_Tex0
+	{
+		PD_FixedFunction	false
+		PD_Stream			0
+		PDP_Position		0	PDT_Float3
+		PDP_BlendWeights	1	PDT_Float3
+		PDP_BlendIndices	2	PDT_UByteColor
+		PDP_Normal			3	PDT_Float3
+		PDP_TexCoord0		7	PDT_Float2
+	}
+	
+	// Implementation
+	Implementation VS11PS10
+	{
+	    "This implementation is intended for hardware 
+	     that supports vertex shader version 1.1, pixel shader version 1.0"
+	    
+		// Requirements for this implementation
+        Requirements
+        {
+            VSVersion				= v1.1
+            PSVersion				= v1.0
+            UserVersion				= v0.0
+            BinormalTangentMethod	= NBTMethod_None
+            BonesPerPartition		= 20
+			UsesNiRenderState		= true
+       }
+        
+		// Packing Definition it uses
+		PackingDef	Pos_BlendWt_BlendInd_Norm_Tex0
+
+		// First pass
+		Pass Pass0
+		{
+			// Vertex shader program
+            VSProgram   "SkinHigh_HL_DL2.vsh"
+            
+            // Pixel shader program
+            PSProgram	"HemisphereLighting.psh"
+
+			// Vertex Shader constant map
+			VS_Constantmap
+			{
+				// sun and ambient
+				CM_Global		SunDir					0	1
+				CM_Global		SunColor				1	1
+				CM_Global		SceneAmbient			2	1
+
+				// material
+				CM_Defined		MaterialDiffuse			3	0
+
+				// misc constants
+				CM_Constant		MiscConstants			5	1	0.0,1.0,0.5,1020.01
+
+				// matrices
+				CM_Defined		ViewProjTranspose		6	0
+				CM_Defined		SkinBoneMatrix4			10	0	20	// this takes up 80 registers!
+				
+				// hemisphere lighting
+				// @NOTE terrain Z at model center is explicitly stuffed into
+				// register 95 in code (95 == kHemisphereLightingShaderModelZRegister)
+				CM_Global		SkyColor				90	1
+				CM_Global		TerrIntensity			91	1						// intensity with which to sample the terrain
+				CM_Constant   	TerrDir        			92	1	0.0,0.0,1.0,1.0
+				CM_Global		TerrSizeRecip			93	1						// reciprocal terrain size
+				CM_Attribute	CutoffHeightRecip		94	1	0					// world height at which to cutoff height-based terrain contrib (reciprocal)
+				// FromCode		TerrZ					95	1
+				
+				// dynamic lighting
+				// @NOTE per-light constants are stuffed starting at register 101 in code 
+				// (101 == kDynamicLightingShaderStartRegister)
+				CM_Constant		DynamicAmbient			100	1	0.15,0.15,0.15,1.0
+				// FromCode		DL1_PositionAndRadius	101	1	// xyz = position, w = 1/r^2
+				// FromCode		DL1_Color				102	1
+				// FromCode		DL2_PositionAndRadius	103	1	// xyz = position, w = 1/r^2
+				// FromCode		DL2_Color				104	1
+			}
+			
+			// Texture stage 0
+			// (base texture)
+			Stage 0 Stage0
+			{
+				TSS_Texture					= NTM_Base
+				TSS_TexCoordIndex			= 0
+				TSS_TextureTransformFlags	= TTFF_Disable
+			}
+
+			// Sampler stage 0
+			Sampler 0   Sampler0
+			{
+				TSAMP_AddressU  = TADDR_Wrap
+				TSAMP_AddressV  = TADDR_Wrap
+				TSAMP_AddressW  = TADDR_Wrap
+				TSAMP_MagFilter = TEXF_Linear
+				TSAMP_MinFilter = TEXF_Linear
+				TSAMP_MipFilter = TEXF_Linear
+			}
+
+			// Texture stage 1
+			// (terrain texture)
+			Stage 1 Stage1
+			{
+				TSS_Texture     			= <TerrainMap>
+				TSS_TexCoordIndex 			= 1
+				TSS_TextureTransformFlags 	= TTFF_Disable
+			}
+
+			// Sampler stage 1
+			Sampler 1   Sampler1
+			{
+				TSAMP_AddressU  = TADDR_Wrap
+				TSAMP_AddressV  = TADDR_Wrap
+				TSAMP_AddressW  = TADDR_Wrap
+				TSAMP_MagFilter = TEXF_Linear
+				TSAMP_MinFilter = TEXF_Linear
+				TSAMP_MipFilter = TEXF_None
+			}
+		}
+	}
+}

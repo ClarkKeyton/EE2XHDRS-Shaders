@@ -1,0 +1,100 @@
+//
+// This shader performs a simple matrix palette skinning implementation
+//
+
+// This version is for low LOD
+// includes directional light ambient value only
+// 2 matrix mul per vert
+// does not pack or transforms normals
+NSFShader SkinLow
+{
+	// Attribute list
+	Global_Attributes
+	{
+		// defines the global attribute sundir
+		Attrib_Color		SunColor		Artist  1.0,0.0,0.0
+		Attrib_Color		SceneAmbient	Artist  1.0,0.0,0.0
+	}
+
+	// Packing Definition, no normal is sent
+	PackingDef PosBlendWeightBlendIndicesUV0
+	{
+		PD_FixedFunction	false
+		PD_Stream			0
+		PDP_Position		0	PDT_Float3
+		PDP_BlendWeights	1	PDT_Float3
+		PDP_BlendIndices	2	PDT_UByteColor
+		PDP_TexCoord0		7	PDT_Float2
+	}
+	
+	// Implementation
+	Implementation VS11
+	{
+	    "This implementation is intended for hardware 
+	     that supports vertex shader version 1.1"
+	    
+		// Requirements for this implementation
+        Requirements
+        {
+            VSVersion				= v1.1
+            UserVersion				= v0.0
+            PSVersion				= v0.0
+            BinormalTangentMethod	= NBTMethod_None
+            BonesPerPartition		= 20
+			UsesNiRenderState		= true
+       }
+        
+		// Packing Definition it uses
+		PackingDef	PosBlendWeightBlendIndicesUV0
+
+		// First pass
+		Pass Pass0
+		{
+			// Vertex shader program
+			VSProgram	"SkinLow.vsh"
+
+			// Vertex Shader constant map
+			VS_Constantmap
+			{
+				// sun and ambient
+				//CM_Global		SunDir					0	1
+				CM_Global		SunColor				1	1
+				CM_Global		SceneAmbient			2	1
+
+				// material
+				CM_Defined		MaterialDiffuse			3	0
+
+				// misc constants
+				CM_Constant		MiscConstants			5	1	0.0,1.0,0.5,1020.01
+
+				// matrices
+				CM_Defined		ViewProjTranspose		6	0
+    			CM_Defined		SkinBoneMatrix4			10	0	20	// this takes up 80 registers!
+			}
+			
+			// Texture stage 0
+			Stage 0	Stage0
+			{
+				TSS_ColorOp		= TOP_Modulate4x
+				TSS_ColorArg1	= TA_Texture
+				TSS_ColorArg2	= TA_Diffuse
+				TSS_AlphaOp		= TOP_Modulate
+				TSS_AlphaArg1	= TA_Texture
+				TSS_AlphaArg2	= TA_Diffuse
+			    TSS_Texture		= NTM_Base
+				TSS_TextureTransformFlags	= TTFF_Disable
+			}
+			
+			// Sampler stage 0
+			Sampler	0	Sampler0
+			{
+				TSAMP_AddressU	= TADDR_Wrap
+				TSAMP_AddressV	= TADDR_Wrap
+				TSAMP_AddressW	= TADDR_Wrap
+				TSAMP_MagFilter	= TEXF_Linear
+				TSAMP_MinFilter	= TEXF_Linear
+				TSAMP_MipFilter	= TEXF_None
+			}
+		}
+	}
+}

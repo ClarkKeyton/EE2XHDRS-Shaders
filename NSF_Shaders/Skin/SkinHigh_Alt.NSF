@@ -1,0 +1,70 @@
+//
+// SkinHigh_Alt.NSF
+// --------------------------------------------------------
+//
+// author: Shanti Gaudreault and Daniel Sproul
+//
+// description:
+// shader which implements rainbow vision effect for
+// a skinned (high LOD) object
+//
+// --------------------------------------------------------
+
+NSFShader SkinHigh_Alt
+{
+	// Packing Definition
+	PackingDef Pos_BlendWt_BlendInd_Norm
+	{
+		PD_FixedFunction	false
+		PD_Stream			0
+		PDP_Position		0	PDT_Float3
+		PDP_BlendWeights	1	PDT_Float3
+		PDP_BlendIndices	2	PDT_UByteColor
+		PDP_Normal			3	PDT_Float3
+	}
+	
+	// Implementation
+	Implementation VS11PS10
+	{
+	    "This implementation is intended for hardware 
+	     that supports vertex shader version 1.1, pixel shader version 1.0"
+	    
+		// Requirements for this implementation
+        Requirements
+        {
+            VSVersion				= v1.1
+            PSVersion				= v1.0
+            UserVersion				= v0.0
+            BinormalTangentMethod	= NBTMethod_None
+            BonesPerPartition		= 20
+			UsesNiRenderState		= true
+       }
+        
+		// Packing Definition it uses
+		PackingDef	Pos_BlendWt_BlendInd_Norm
+
+		// First pass
+		Pass Pass0
+		{
+			// Vertex shader program
+            VSProgram   "SkinHigh_Alt.vsh"
+            
+            // Pixel shader program
+            PSProgram	"PassThrough_2X.psh"
+
+			// Vertex Shader constant map
+			VS_Constantmap
+			{
+				// material
+				CM_Defined		MaterialDiffuse			3	0
+
+				// misc constants
+				CM_Constant		MiscConstants			5	1	0.0,1.0,0.5,1020.01
+
+				// matrices
+				CM_Defined		ViewProjTranspose		6	0
+				CM_Defined		SkinBoneMatrix4			10	0	20	// this takes up 80 registers!
+			}
+		}
+	}
+}

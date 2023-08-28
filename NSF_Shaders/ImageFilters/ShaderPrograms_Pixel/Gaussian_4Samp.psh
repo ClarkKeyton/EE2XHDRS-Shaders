@@ -1,0 +1,56 @@
+//
+// Gaussian_4Samp.psh
+// --------------------------------------------------------
+//
+// author: Daniel Sproul
+//
+// description:
+// pixel shader which implements a 2x2 gaussian blur filter for
+// post-processing a rendered scene
+//
+// input:
+// t0 -- upper-left tex coords
+// t1 -- uppertex coords
+// t2 -- left tex coords
+// t3 -- center tex coords
+//
+// constants:
+// c0 -- SampleWeights (x = corner, y = side, z = center, w = unused)
+//
+// --------------------------------------------------------
+
+// pixel shader version
+// @NOTE we use swizzles, write masks, and temp registers which require 1.4
+ps.1.4
+
+// take texture samples
+texld	r0, t0
+texld	r1, t1
+texld	r2, t2
+texld	r3, t3
+
+// combine first two samples
+mul		r1.rgb, r1, c0.yyy		// apply upper weight
+mad		r0.rgb, r0, c0.xxx, r1	// apply upper-left weight, add weighted upper
+
+// combine last two samples
+mul		r3.rgb, r3, c0.zzz		// apply center weight
+mad		r2.rgb, r2, c0.yyy, r3	// apply left weight, add weighted center
+
+// final sum
+add		r0.rgb, r0, r2
+
+/*
+// THIS IS EQUIVALENT, BUT WHILE MORE READABLE, USES MORE INSTRUCTIONS
+
+// apply weights
+mul		r0.rgb, r0, c0.xxx	// upper-left (corner weight)
+mul		r1.rgb, r1, c0.yyy	// upper (side weight)
+mul		r2.rgb, r2, c0.yyy	// left (side weight)
+mul		r3.rgb, r3, c0.zzz	// center (center weight)
+
+// sum
+add		r0.rgb, r0, r1
+add		r0.rgb, r0, r2
+add		r0.rgb, r0, r3
+*/

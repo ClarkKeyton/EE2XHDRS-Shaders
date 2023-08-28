@@ -1,0 +1,34 @@
+//
+// HDRFinal.psh
+// --------------------------------------------------------
+//
+// author: Daniel Sproul
+//
+// description:
+// shader which implements final pass of HDR filter
+// intended to be applied to a screen polygon textured
+// with a rendered texture of the world scene
+//
+// input:
+// t0 -- base texture coords
+// t1 -- glare texture coords
+//
+// constants:
+// c0 -- DisplayableMultHalf (yzw unused)
+//
+// --------------------------------------------------------
+
+// pixel shader version
+ps.1.4
+
+// take texture samples
+texld	r0, t0	// base texture
+texld	r1, t1	// glare texture
+
+// apply displayable mult to map back from HDR color space
+// the constant actually stores half the desired multiplier to avoid
+// PS register clamping, so we compensate by applying _x2 to the result
+mul_x2	r0.rgb, r0, c0.xxx
+
+// add glare
+add		r0.rgb, r0, r1

@@ -1,0 +1,74 @@
+
+// This version is for outline rendering when the 
+// unit is behind a building
+// no light just player color passed in the material diffuse
+// 2 matrix mul per vert
+NSFShader Skin_OutlineCast
+{
+	// Attribute list
+	Global_Attributes
+	{
+		// defines the global attribute 
+		Attrib_Color		PlayerColor		Artist  1.0,0.0,0.0
+	}
+
+	// Packing Definition, no normal is sent
+	PackingDef PosBlendWeightBlendIndices
+	{
+		PD_Stream			0
+		PDP_Position		0	PDT_Float3
+		PDP_BlendWeights	1	PDT_Float1
+		PDP_BlendIndices	2	PDT_UByteColor
+	}
+	
+	// Implementation
+	Implementation VS11
+	{
+	    "This implementation is intended for hardware 
+	     that supports vertex shader version 1.1"
+	    
+		// Requirements for this implementation
+        Requirements
+        {
+            VSVersion				= v1.1
+            UserVersion				= v0.0
+            PSVersion				= v0.0
+            BinormalTangentMethod	= NBTMethod_None
+            BonesPerPartition		= 20
+			UsesNiRenderState		= true
+       }
+        
+		// Packing Definition it uses
+		PackingDef	PosBlendWeightBlendIndices
+
+		// First pass
+		Pass Pass0
+		{
+			// Vertex shader program
+			VSProgram	"Skin_OutlineCast.vsh"
+
+			// Vertex Shader constant map
+			VS_Constantmap
+			{
+				CM_Defined		ViewProjTranspose		0	0
+				// use this for player color value
+				CM_Defined		MaterialDiffuse			4	0
+				CM_Constant		const_1_1_1_255			5	1	1.0,1.0,1.0,1020.01
+				//CM_Global		PlayerColor				7	1
+				CM_Defined		SkinBoneMatrix4			10	0	20
+			}
+			
+			// Texture stage 0
+			Stage 0	Stage0
+			{
+				TSS_ColorOp					= TOP_Disable
+				TSS_TextureTransformFlags	= TTFF_Disable
+			}
+			
+			// Sampler stage 0
+			Sampler	0	Sampler0
+			{
+			}
+		}
+	}
+}

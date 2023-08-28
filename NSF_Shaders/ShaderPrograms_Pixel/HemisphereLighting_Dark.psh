@@ -1,0 +1,52 @@
+//
+// HemisphereLighting.psh
+// --------------------------------------------------------
+//
+// author: Daniel Sproul
+//
+// description:
+// Pixel shader which implements hemisphere lighting effect
+//
+// input:
+// color 0 (v0) -- summed lighting minus terrain contribution (sky, directional, dynamic)
+// color 1 (v1) -- intensity with which to sample the terrain texture to get terrain lighting contribution
+// texture 0 -- base texture
+// texture 1 -- terrain texture (tex coords based on world position)
+//
+// --------------------------------------------------------
+
+// pixel shader version
+ps.1.0
+
+// @TEST this will just pass color 0
+//mov		r0, v0
+
+// @TEST these three lines will just pass the total illumination used
+//tex		t2
+//mul		r0, t2, v1
+//add		r0, r0, v0
+
+// take texture samples
+tex		t0	// base texture
+tex		t1	// dark map
+tex		t2	// terrain map
+
+// compute lighting contribution from the terrain (color 1 * terrain texture color)
+mul		r0, t2, v1
+
+// @TEST just pass terrain intensity
+//mov		r0, v1
+
+// add other light contributions (color 0)
+add		r0, r0, v0
+
+// apply dark map
+mul		r0, r0, t1
+
+// modulate lighting with base texture (modulate 4X)
+// alpha is color 0 alpha * base texture alpha
+mul_x4	r0.rgb, r0, t0
++ mul	r0.a, v0, t0
+
+// @TEST to make everything super-bright
+//mov_x4	r0.rgb, r0

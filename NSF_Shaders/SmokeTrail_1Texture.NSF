@@ -1,0 +1,61 @@
+NSFShader SmokeTrail_1Texture
+{
+	// Implementation
+    Implementation SmokeTrail_1Texture_VS00_PS00
+    {
+        "This implementation is intended for hardware 
+         that supports vertex shader version 0.0"
+        
+        // Requirements for this implementation
+        Requirements
+        {
+            Platform            = DX8|DX9
+			UserVersion         = v0.0
+            VSVersion           = v0.0
+            PSVersion           = v0.0
+            UsesNiRenderState   = true
+        }
+        
+        // 'Global' render states
+        RenderStates
+        {
+            ZEnable             = ZB_True
+            ZWriteEnable        = false
+			ZFunc               = LessEqual
+            AlphaBlendEnable    = true
+			SrcBlend            = SrcAlpha
+            DestBlend           = InvSrcAlpha
+			Lighting            = false
+        }
+
+        // First pass
+        Pass Pass0
+        {    
+            // Texture stage 0
+            Stage 0 Stage0
+            {
+				TSS_ColorArg1   = TA_Texture
+				TSS_ColorArg2   = TA_Diffuse
+                TSS_ColorOp     = TOP_Modulate
+				TSS_AlphaArg1   = TA_Texture
+				TSS_AlphaArg2   = TA_Diffuse
+                TSS_AlphaOp     = TOP_Modulate
+				TSS_Texture     = NTM_Base
+				TSS_TexCoordIndex = 0
+				TSS_TextureTransformFlags	= TTFF_Disable
+            }
+            
+            // Sampler stage 0
+            Sampler 0   Sampler0
+            {
+                TSAMP_AddressU  = TADDR_Wrap
+                TSAMP_AddressV  = TADDR_Wrap
+                TSAMP_AddressW  = TADDR_Wrap
+                TSAMP_MagFilter = TEXF_Linear
+                TSAMP_MinFilter = TEXF_Linear
+                TSAMP_MipFilter = TEXF_None
+            }
+        }
+    }
+}
+
